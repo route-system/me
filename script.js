@@ -1,5 +1,5 @@
 // script.js — logic for route-system
-const API_URL = 'https://script.google.com/macros/s/AKfycbyl_a3jSysX9rP6JbyZGXnfEz9Tkx2G6kSX5dUpqM19e81QeAERMvGXR9n9JaKoRkzU/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz9iZFanw3ZEL0DELPA8taFExNOQHkLv28FuMH002Tf4pR9TIyG0IVFXd-eX3Ar3rcu/exec';
 let map, directionsService, directionsRenderer, markers = [];
 
 const nameInput = ()=>document.getElementById('name');
