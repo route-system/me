@@ -1,5 +1,7 @@
 // script.js — logic for route-system
+// ✅ เปลี่ยนเป็น URL ของ Web App ของคุณเอง
 const API_URL = 'https://script.google.com/macros/s/AKfycbzhYmWJNfMT405g8ffPRb9tOWQXcVGVpCbA70m3Bdo6Hpbgwg_xaytA2XsLOxbDbZ1XEg/exec';
+
 let map, directionsService, directionsRenderer, markers = [];
 
 const nameInput = ()=>document.getElementById('name');
@@ -22,16 +24,31 @@ function showStatus(msg, type='info'){
   setTimeout(()=>{ if (el.textContent === msg) el.textContent = ''; }, 5000);
 }
 
+// ✅ เพิ่ม error handling และรองรับ CORS อย่างปลอดภัย
 async function apiGet(){
-  const res = await fetch(API_URL, { method:'GET', mode:'cors' });
-  if (!res.ok) throw new Error('HTTP '+res.status);
-  return await res.json();
+  try {
+    const res = await fetch(API_URL + '?t=' + Date.now(), { method:'GET' });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  } catch(err) {
+    console.error('apiGet error:', err);
+    throw err;
+  }
 }
 
 async function apiPost(payload){
-  const res = await fetch(API_URL, { method:'POST', mode:'cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-  if (!res.ok) throw new Error('HTTP '+res.status);
-  return await res.json();
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  } catch(err) {
+    console.error('apiPost error:', err);
+    throw err;
+  }
 }
 
 async function saveData(){
@@ -43,28 +60,43 @@ async function saveData(){
     lng: lngInput().value.trim()
   };
   if (!payload.name) { showStatus('กรุณากรอกชื่อ', 'error'); return; }
+
   try{
     await apiPost(payload);
-    showStatus('บันทึกเรียบร้อย', 'success');
+    showStatus('✅ บันทึกเรียบร้อย', 'success');
     await refreshAll();
-  }catch(err){ console.error(err); showStatus('บันทึกไม่สำเร็จ: '+err.message, 'error'); }
+  }catch(err){
+    console.error(err);
+    showStatus('❌ บันทึกไม่สำเร็จ: '+err.message, 'error');
+  }
 }
 
 async function refreshAll(){
   try{
     const rows = await apiGet();
     renderTable(rows);
-    document.getElementById('count').textContent = `📍 จำนวนพิกัดทั้งหมด: ${rows.length}`;
     renderMarkers(rows);
     updateDashboard(rows);
-  }catch(err){ console.error(err); showStatus('ดึงข้อมูลไม่สำเร็จ: '+err.message,'error'); }
+  }catch(err){
+    console.error(err);
+    showStatus('❌ ดึงข้อมูลไม่สำเร็จ: '+err.message,'error');
+  }
 }
 
 function clearMarkers(){ markers.forEach(m=>m.setMap(null)); markers = []; }
 
 function renderMarkers(rows){
   clearMarkers();
-  rows.forEach(r=>{ if (r.lat && r.lng){ const m = new google.maps.Marker({position:{lat: parseFloat(r.lat), lng: parseFloat(r.lng)}, map, title: r.name}); markers.push(m); } });
+  rows.forEach(r=>{
+    if (r.lat && r.lng){
+      const m = new google.maps.Marker({
+        position:{lat: parseFloat(r.lat), lng: parseFloat(r.lng)},
+        map,
+        title: r.name
+      });
+      markers.push(m);
+    }
+  });
   if (markers.length>0) map.setCenter(markers[0].getPosition());
 }
 
@@ -92,21 +124,20 @@ async function markDelivered(name){
   if(!confirm(`ยืนยัน "ส่งแล้ว" สำหรับ ${name}?`)) return;
   try{
     await apiPost({name:name, status:'ส่งแล้ว', time: new Date().toLocaleString()});
-    showStatus('อัปเดตสถานะเรียบร้อย', 'success');
+    showStatus('✅ อัปเดตสถานะเรียบร้อย', 'success');
     await refreshAll();
-  }catch(err){ console.error(err); showStatus('อัปเดตไม่สำเร็จ: '+err.message,'error'); }
+  }catch(err){ console.error(err); showStatus('❌ อัปเดตไม่สำเร็จ: '+err.message,'error'); }
 }
 
 async function deleteRecord(name){
   if(!confirm(`ลบรายการ ${name} ?`)) return;
   try{
-    // call delete via GET parameter; Apps Script doDelete handles it
-    const res = await fetch(API_URL + '?name=' + encodeURIComponent(name), { method:'DELETE', mode:'cors' });
+    const res = await fetch(API_URL + '?name=' + encodeURIComponent(name), { method:'DELETE' });
     if (!res.ok) throw new Error('HTTP '+res.status);
     await res.json();
-    showStatus('ลบเรียบร้อย','success');
+    showStatus('🗑️ ลบเรียบร้อย','success');
     await refreshAll();
-  }catch(err){ console.error(err); showStatus('ลบไม่สำเร็จ: '+err.message,'error'); }
+  }catch(err){ console.error(err); showStatus('❌ ลบไม่สำเร็จ: '+err.message,'error'); }
 }
 
 async function calculateRoute(){
@@ -114,6 +145,7 @@ async function calculateRoute(){
     const rows = await apiGet();
     const valid = rows.filter(r => !isNaN(parseFloat(r.lat)) && !isNaN(parseFloat(r.lng)));
     if (valid.length < 2){ alert('ต้องมีพิกัดอย่างน้อย 2 จุด'); return; }
+
     const origin = {lat: parseFloat(valid[0].lat), lng: parseFloat(valid[0].lng)};
     const destination = {lat: parseFloat(valid.at(-1).lat), lng: parseFloat(valid.at(-1).lng)};
     const waypoints = valid.slice(1,-1).map(p => ({location: {lat: parseFloat(p.lat), lng: parseFloat(p.lng)}, stopover:true}));
@@ -121,18 +153,32 @@ async function calculateRoute(){
     directionsService.route({origin, destination, waypoints, travelMode:'DRIVING', optimizeWaypoints:true}, (result,status)=>{
       if (status !== 'OK'){ alert('Google Maps Error: ' + status); return; }
       directionsRenderer.setDirections(result);
-      const route = result.routes[0]; let totalDist = 0, totalTime = 0; let html = '<h4>สรุปเส้นทาง</h4>';
-      route.legs.forEach((leg,i)=>{ html += `<div>${i+1}. ${leg.start_address} → ${leg.end_address}<br>ระยะทาง: ${leg.distance.text}, เวลา: ${leg.duration.text}</div><hr>`; totalDist += leg.distance.value; totalTime += leg.duration.value; });
+      const route = result.routes[0];
+      let totalDist = 0, totalTime = 0;
+      let html = '<h4>สรุปเส้นทาง</h4>';
+      route.legs.forEach((leg,i)=>{
+        html += `<div>${i+1}. ${leg.start_address} → ${leg.end_address}<br>ระยะทาง: ${leg.distance.text}, เวลา: ${leg.duration.text}</div><hr>`;
+        totalDist += leg.distance.value;
+        totalTime += leg.duration.value;
+      });
       html += `<b>รวม:</b> ${(totalDist/1000).toFixed(1)} กม., ${(totalTime/60).toFixed(0)} นาที`;
       document.getElementById('routeSummary').innerHTML = html;
     });
-  }catch(err){ console.error(err); showStatus('คำนวณเส้นทางผิดพลาด: '+err.message,'error'); }
+  }catch(err){
+    console.error(err);
+    showStatus('❌ คำนวณเส้นทางผิดพลาด: '+err.message,'error');
+  }
 }
 
 function escapeHtml(s){ if(!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
 
-function capture(){ html2canvas(document.body).then(canvas=>{ const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'route_capture.png'; a.click(); }); }
+function capture(){ html2canvas(document.body).then(canvas=>{
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'route_capture.png';
+  a.click();
+}); }
 
 function updateDashboard(rows){
   const total = rows.length;
@@ -141,7 +187,6 @@ function updateDashboard(rows){
   document.getElementById('totalCount').textContent = `ทั้งหมด: ${total}`;
   document.getElementById('deliveredCount').textContent = `ส่งแล้ว: ${delivered}`;
   document.getElementById('pendingCount').textContent = `ยังไม่ส่ง: ${pending}`;
-  // update pie chart
   const ctx = document.getElementById('pieChart').getContext('2d');
   if (window._pieChart) window._pieChart.destroy();
   window._pieChart = new Chart(ctx, { type:'pie', data:{ labels: ['ส่งแล้ว','ยังไม่ส่ง'], datasets:[{ data:[delivered,pending] }] } });
@@ -149,7 +194,12 @@ function updateDashboard(rows){
 
 window.addEventListener('load', ()=>{
   initMap();
-  document.getElementById('btnGeolocate').onclick = ()=>{ navigator.geolocation.getCurrentPosition(p=>{ latInput().value = p.coords.latitude.toFixed(6); lngInput().value = p.coords.longitude.toFixed(6); showStatus('ดึงพิกัดสำเร็จ','success'); }, e=>showStatus('ไม่สามารถดึงพิกัด: '+e.message,'error')); };
+  document.getElementById('btnGeolocate').onclick = ()=>{ 
+    navigator.geolocation.getCurrentPosition(
+      p=>{ latInput().value = p.coords.latitude.toFixed(6); lngInput().value = p.coords.longitude.toFixed(6); showStatus('📍 ดึงพิกัดสำเร็จ','success'); },
+      e=>showStatus('❌ ไม่สามารถดึงพิกัด: '+e.message,'error')
+    );
+  };
   document.getElementById('btnSave').onclick = saveData;
   document.getElementById('btnRefresh').onclick = refreshAll;
   document.getElementById('btnShowMarkers').onclick = async ()=>{ const rows = await apiGet(); renderMarkers(rows); renderTable(rows); };
