@@ -1,0 +1,15 @@
+/* Basic styles for route-system */
+body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#f4f6f8;color:#222;margin:0;padding:0}
+.top{background:#0b5;padding:18px;color:#002;border-bottom:4px solid rgba(0,0,0,0.05)}
+.container{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;padding:16px}
+.card{background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.controls{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+#map{height:360px;border-radius:8px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border:1px solid #e6e6e6;padding:8px}
+.status{margin-top:8px}
+.status.error{color:#c00}
+.status.success{color:#080}
+.summary{margin-top:8px;padding:8px;background:#fafafa;border-radius:6px}
+.footer{padding:12px;text-align:center;font-size:13px;color:#666}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Route System — Delivery Tracking</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCsEcWlmqSrtXWq38852A7yhdyUa-HPBRU&libraries=places"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>ระบบติดตามการจัดส่ง (Route System)</h1>
+    <p class="subtitle">บันทึกพิกัด → คำนวณเส้นทาง → สถานะการจัดส่ง (เชื่อม Google Sheets)</p>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>1. เพิ่ม / แก้ไข จุดจัดส่ง</h2>
+      <div class="form-grid">
+        <input id="name" placeholder="ชื่อลูกค้า / สถานที่" />
+        <input id="phone" placeholder="เบอร์โทร (ไม่บังคับ)" />
+        <input id="note" placeholder="หมายเหตุ (ไม่บังคับ)" />
+        <input id="lat" placeholder="ละติจูด" />
+        <input id="lng" placeholder="ลองจิจูด" />
+      </div>
+      <div class="controls">
+        <button id="btnGeolocate">📍 ดึงพิกัดปัจจุบัน</button>
+        <button id="btnSave">💾 บันทึก/อัปเดต</button>
+        <button id="btnRefresh">🔄 ดึงข้อมูลล่าสุด</button>
+      </div>
+      <p id="statusMsg" class="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>2. แผนที่ & คำนวณเส้นทาง</h2>
+      <div class="controls">
+        <button id="btnShowMarkers">📍 แสดงจุดทั้งหมด</button>
+        <button id="btnCalcRoute">🧭 คำนวณเส้นทางสั้นที่สุด</button>
+      </div>
+      <div id="map"></div>
+      <div id="routeSummary" class="summary"></div>
+    </section>
+
+    <section class="card">
+      <h2>3. ตารางจัดส่ง</h2>
+      <div class="controls">
+        <button id="btnClearTable">🧹 ล้างตาราง (UI)</button>
+        <button id="btnCapture">📸 บันทึกหน้าจอ</button>
+      </div>
+      <table id="resultTable" class="table">
+        <thead><tr><th>#</th><th>ชื่อ</th><th>โทร</th><th>สถานะ</th><th>เวลา</th><th>จัดการ</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Dashboard / สรุป</h2>
+      <div class="controls">
+        <div style="width:260px">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="summary" id="dashStats">
+          <p id="totalCount">ทั้งหมด: 0</p>
+          <p id="deliveredCount">ส่งแล้ว: 0</p>
+          <p id="pendingCount">ยังไม่ส่ง: 0</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <small>โปรเจกต์: route-system — เชื่อม Google Apps Script (Google Sheets)</small>
+  </footer>
+</body>
+</html>
