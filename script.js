@@ -1,6 +1,6 @@
 // script.js — logic for route-system
 // ✅ เปลี่ยนเป็น URL ของ Web App ของคุณเอง
-const API_URL = 'https://script.google.com/macros/s/AKfycbzhYmWJNfMT405g8ffPRb9tOWQXcVGVpCbA70m3Bdo6Hpbgwg_xaytA2XsLOxbDbZ1XEg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzK-EpacMCe_wDo5Gpgyhzj3Ez_xlcIxGH4983V_VCUGLpYVG40Q0qCPG92EGLwAx8SVA/exec';
 
 let map, directionsService, directionsRenderer, markers = [];
 
